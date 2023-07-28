@@ -21,11 +21,17 @@ function App() {
       balance: 0,
     },
   ];
+
+  const [friends, setFriends] = useState(initialFriends);
+  function handleAddFriend(newFriend) {
+    setFriends((friends) => [...friends, newFriend]);
+  }
+
   return (
     <div className="app">
       <div className="sidebar">
-        <FriendList friends={initialFriends} />
-        <AddFriend />
+        <FriendList friends={friends} />
+        <AddFriend onAddFriend={handleAddFriend} />
       </div>
       <div>
         <FormSplitBill friend={initialFriends[0]} />
@@ -65,14 +71,19 @@ function Friend({ friend }) {
   );
 }
 
-function AddFriend() {
+function AddFriend({ onAddFriend }) {
   const [isAddingFriend, setIsAddingFriend] = useState(false);
   return (
     <>
-      <FormAddFriend isAddingFriend={isAddingFriend} />
+      <FormAddFriend
+        isAddingFriend={isAddingFriend}
+        onAddFriend={onAddFriend}
+      />
       <Button
-        onAddFriend={() => setIsAddingFriend(!isAddingFriend)}
-        type="add-friend"
+        onIsAddingFriend={() =>
+          setIsAddingFriend((isAddingFriend) => !isAddingFriend)
+        }
+        type="adding-friend"
       >
         {isAddingFriend ? "Close" : "Add friend"}
       </Button>
@@ -80,15 +91,34 @@ function AddFriend() {
   );
 }
 
-function FormAddFriend({ isAddingFriend }) {
+function FormAddFriend({ isAddingFriend, onAddFriend }) {
+  const [newName, setNewName] = useState("");
+
+  function addNewFriend(e) {
+    e.preventDefault();
+    const newFriend = {
+      name: newName,
+      image: "",
+      balance: 0,
+      id: crypto.randomUUID,
+    };
+    console.log(newFriend);
+  }
+
   if (isAddingFriend)
     return (
-      <form className="form-add-friend">
+      <form className="form-add-friend" onSubmit={addNewFriend}>
         <label>👯Friend name</label>
-        <input type="text" />
+        <input
+          type="text"
+          onChange={(e) => setNewName(e.target.value)}
+          value={newName}
+        />
+
         <label>🌠Image URL</label>
         <input type="text" />
-        <Button>Add</Button>
+
+        <ButtonAddNewFriend>Add</ButtonAddNewFriend>
       </form>
     );
 }
@@ -121,15 +151,19 @@ function FormSplitBill({ friend }) {
   );
 }
 
-function Button({ children, onAddFriend, type }) {
+function Button({ children, onIsAddingFriend, type }) {
   function handleClick(type) {
-    if ((type = "add-friend")) onAddFriend();
+    if ((type = "adding-friend")) onIsAddingFriend();
   }
   return (
     <button className="button" onClick={() => handleClick(type)}>
       {children}
     </button>
   );
+}
+
+function ButtonAddNewFriend({ children }) {
+  return <button className="button">{children}</button>;
 }
 
 export default App;
