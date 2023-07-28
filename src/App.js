@@ -1,5 +1,3 @@
-import logo from "./logo.svg";
-
 function App() {
   const initialFriends = [
     {
@@ -27,6 +25,9 @@ function App() {
         <FriendList friends={initialFriends} />
         <FormAddFriend />
         <Button>Add friend</Button>
+      </div>
+      <div>
+        <FormSplitBill friend={initialFriends[0]} />
       </div>
     </div>
   );
@@ -71,6 +72,34 @@ function FormAddFriend() {
       <label>🌠Image URL</label>
       <input type="text" />
       <Button>Add</Button>
+    </form>
+  );
+}
+
+function FormSplitBill({ friend }) {
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with {friend.name}</h2>
+      <label>💰Bill value</label>
+      <input type="text" />
+      <label>💃Your expense</label>
+      {friend.balance < 0 ? (
+        <input type="text" />
+      ) : (
+        <input type="text" disabled />
+      )}
+      <label>👯{friend.name}'s expense</label>
+      {friend.balance > 0 ? (
+        <input type="text" />
+      ) : (
+        <input type="text" disabled />
+      )}
+      <label>🤑Who is paying the bill?</label>
+      <select>
+        <option value="you">You</option>
+        <option value={friend}>{friend.name}</option>
+      </select>
+      <Button>Split bill</Button>
     </form>
   );
 }
