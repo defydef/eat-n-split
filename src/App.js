@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 function App() {
   const initialFriends = [
     {
@@ -23,8 +25,7 @@ function App() {
     <div className="app">
       <div className="sidebar">
         <FriendList friends={initialFriends} />
-        <FormAddFriend />
-        <Button>Add friend</Button>
+        <AddFriend />
       </div>
       <div>
         <FormSplitBill friend={initialFriends[0]} />
@@ -37,7 +38,7 @@ function FriendList({ friends }) {
   return (
     <ul>
       {friends.map((friend) => (
-        <Friend friend={friend} />
+        <Friend friend={friend} key={friend.id} />
       ))}{" "}
     </ul>
   );
@@ -64,16 +65,32 @@ function Friend({ friend }) {
   );
 }
 
-function FormAddFriend() {
+function AddFriend() {
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
   return (
-    <form className="form-add-friend">
-      <label>👯Friend name</label>
-      <input type="text" />
-      <label>🌠Image URL</label>
-      <input type="text" />
-      <Button>Add</Button>
-    </form>
+    <>
+      <FormAddFriend isAddingFriend={isAddingFriend} />
+      <Button
+        onAddFriend={() => setIsAddingFriend(!isAddingFriend)}
+        type="add-friend"
+      >
+        {isAddingFriend ? "Close" : "Add friend"}
+      </Button>
+    </>
   );
+}
+
+function FormAddFriend({ isAddingFriend }) {
+  if (isAddingFriend)
+    return (
+      <form className="form-add-friend">
+        <label>👯Friend name</label>
+        <input type="text" />
+        <label>🌠Image URL</label>
+        <input type="text" />
+        <Button>Add</Button>
+      </form>
+    );
 }
 
 function FormSplitBill({ friend }) {
@@ -104,8 +121,15 @@ function FormSplitBill({ friend }) {
   );
 }
 
-function Button({ children }) {
-  return <button className="button">{children}</button>;
+function Button({ children, onAddFriend, type }) {
+  function handleClick(type) {
+    if ((type = "add-friend")) onAddFriend();
+  }
+  return (
+    <button className="button" onClick={() => handleClick(type)}>
+      {children}
+    </button>
+  );
 }
 
 export default App;
