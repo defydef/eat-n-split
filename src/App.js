@@ -37,6 +37,30 @@ function App() {
     }
   }
 
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
+  const handleIsAddingFriend = () => setIsAddingFriend((isAdding) => !isAdding);
+
+  function handleHideAddFriend() {
+    setIsAddingFriend(false);
+  }
+
+  function handleFriendBalance(id, amount, whoIsPaying) {
+    console.log(amount, whoIsPaying);
+    setFriends((friends) =>
+      friends.map((friend) =>
+        friend.id === id
+          ? {
+              ...friend,
+              balance:
+                whoIsPaying === "user"
+                  ? friend.balance + amount
+                  : friend.balance - amount,
+            }
+          : friend
+      )
+    );
+  }
+
   return (
     <div className="app">
       <div className="sidebar">
@@ -44,20 +68,35 @@ function App() {
           friends={friends}
           onSetActiveFriendId={handleActiveFriendId}
           activeFriendId={activeFriendId}
+          isAddingFriend={isAddingFriend}
+          onHideAddFriend={handleHideAddFriend}
         />
         <AddFriend
           onAddNewFriend={handleAddNewFriend}
-          onHideSplitBill={() => setActiveFriendId(null)}
+          activeFriendId={activeFriendId}
+          isAddingFriend={isAddingFriend}
+          onIsAddingFriend={handleIsAddingFriend}
         />
       </div>
       <div>
-        <FormSplitBill friends={friends} activeFriendId={activeFriendId} />
+        <FormSplitBill
+          friends={friends}
+          activeFriendId={activeFriendId}
+          isAddingFriend={isAddingFriend}
+          onUpdateBalance={handleFriendBalance}
+        />
       </div>
     </div>
   );
 }
 
-function FriendList({ friends, onSetActiveFriendId, activeFriendId }) {
+function FriendList({
+  friends,
+  onSetActiveFriendId,
+  activeFriendId,
+  isAddingFriend,
+  onHideAddFriend,
+}) {
   return (
     <ul>
       {friends.map((friend) => (
@@ -66,15 +105,27 @@ function FriendList({ friends, onSetActiveFriendId, activeFriendId }) {
           key={friend.id}
           onSetActiveFriendId={onSetActiveFriendId}
           activeFriendId={activeFriendId}
+          isAddingFriend={isAddingFriend}
+          onHideAddFriend={onHideAddFriend}
         />
       ))}{" "}
     </ul>
   );
 }
 
-function Friend({ friend, onSetActiveFriendId, activeFriendId }) {
+function Friend({
+  friend,
+  onSetActiveFriendId,
+  activeFriendId,
+  isAddingFriend,
+  onHideAddFriend,
+}) {
   return (
-    <li className={friend.id === activeFriendId ? "selected" : ""}>
+    <li
+      className={
+        friend.id === activeFriendId && !isAddingFriend ? "selected" : ""
+      }
+    >
       <img src={friend.image} alt="friend avatar" />
       <h3>{friend.name}</h3>
       {friend.balance < 0 ? (
@@ -93,29 +144,23 @@ function Friend({ friend, onSetActiveFriendId, activeFriendId }) {
         onSetActiveFriendId={onSetActiveFriendId}
         friendId={friend.id}
         activeFriendId={activeFriendId}
+        onHideAddFriend={onHideAddFriend}
       >
-        {friend.id === activeFriendId ? "Close" : "Select"}
+        {friend.id === activeFriendId && !isAddingFriend ? "Close" : "Select"}
       </Button>
     </li>
   );
 }
 
-function AddFriend({ onAddNewFriend, onHideSplitBill }) {
-  const [isAddingFriend, setIsAddingFriend] = useState(false);
-  if (isAddingFriend) onHideSplitBill();
+function AddFriend({ onAddNewFriend, onIsAddingFriend, isAddingFriend }) {
   return (
     <>
       <FormAddFriend
         isAddingFriend={isAddingFriend}
         onAddNewFriend={onAddNewFriend}
-        onIsAddingFriend={() => setIsAddingFriend(false)}
+        onIsAddingFriend={onIsAddingFriend}
       />
-      <Button
-        onIsAddingFriend={() =>
-          setIsAddingFriend((isAddingFriend) => !isAddingFriend)
-        }
-        type="adding-friend"
-      >
+      <Button onIsAddingFriend={onIsAddingFriend} type="adding-friend">
         {isAddingFriend ? "Close" : "Add friend"}
       </Button>
     </>
@@ -162,35 +207,73 @@ function FormAddFriend({ isAddingFriend, onAddNewFriend, onIsAddingFriend }) {
     );
 }
 
-function FormSplitBill({ friends, activeFriendId }) {
+function FormSplitBill({
+  friends,
+  activeFriendId,
+  isAddingFriend,
+  onUpdateBalance,
+}) {
   function activeFriend(friend) {
     return friend.id === activeFriendId;
   }
-
   const friend = friends.find(activeFriend);
 
+  const [bill, setBill] = useState("");
+  const [paidByUser, setPaidByUser] = useState("");
+  const paidByFriend = bill ? bill - paidByUser : "";
+  const [whoIsPaying, setWhoIsPaying] = useState("user");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!paidByFriend || paidByFriend === "") return;
+    onUpdateBalance(friend.id, paidByFriend, whoIsPaying);
+  }
+
   return (
-    activeFriendId && (
-      <form className="form-split-bill">
+    activeFriendId &&
+    !isAddingFriend && (
+      <form className="form-split-bill" onSubmit={(e) => handleSubmit(e)}>
         <h2>Split a bill with {friend.name}</h2>
         <label>💰Bill value</label>
-        <input type="text" />
+        <input
+          type="text"
+          value={bill}
+          onChange={(e) => setBill(Number(e.target.value))}
+        />
         <label>💃Your expense</label>
         {friend.balance < 0 ? (
-          <input type="text" />
+          <input
+            type="text"
+            value={paidByUser}
+            onChange={(e) =>
+              setPaidByUser(
+                Number(e.target.value) <= bill
+                  ? Number(e.target.value)
+                  : paidByUser
+              )
+            }
+          />
         ) : (
-          <input type="text" disabled />
+          <input
+            type="text"
+            disabled
+            value={paidByUser}
+            onChange={(e) => setWhoIsPaying(e.target.value)}
+          />
         )}
         <label>👯{friend.name}'s expense</label>
         {friend.balance > 0 ? (
-          <input type="text" value={Math.abs(friend.balance)} />
+          <input type="text" value={paidByFriend} />
         ) : (
-          <input type="text" disabled value={Math.abs(friend.balance)} />
+          <input type="text" disabled value={paidByFriend} />
         )}
         <label>🤑Who is paying the bill?</label>
-        <select>
-          <option value="you">You</option>
-          <option value={friend}>{friend.name}</option>
+        <select
+          value={whoIsPaying}
+          onChange={(e) => setWhoIsPaying(e.target.value)}
+        >
+          <option value="user">You</option>
+          <option value="friend">{friend.name}</option>
         </select>
         <Button>Split bill</Button>
       </form>
@@ -205,11 +288,13 @@ function Button({
   onSetActiveFriendId,
   friendId,
   activeFriendId,
+  onHideAddFriend,
 }) {
   function handleClick(type) {
     if (type === "adding-friend") onIsAddingFriend();
     else if (type === "show-split-bill") {
       onSetActiveFriendId(friendId, activeFriendId);
+      onHideAddFriend();
     }
   }
   return (
