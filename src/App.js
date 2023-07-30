@@ -59,6 +59,7 @@ function App() {
           : friend
       )
     );
+    setActiveFriendId(null);
   }
 
   return (
@@ -227,6 +228,9 @@ function FormSplitBill({
     e.preventDefault();
     if (!paidByFriend || paidByFriend === "") return;
     onUpdateBalance(friend.id, paidByFriend, whoIsPaying);
+    setBill("");
+    setPaidByUser("");
+    setWhoIsPaying("user");
   }
 
   return (
@@ -241,32 +245,19 @@ function FormSplitBill({
           onChange={(e) => setBill(Number(e.target.value))}
         />
         <label>💃Your expense</label>
-        {friend.balance < 0 ? (
-          <input
-            type="text"
-            value={paidByUser}
-            onChange={(e) =>
-              setPaidByUser(
-                Number(e.target.value) <= bill
-                  ? Number(e.target.value)
-                  : paidByUser
-              )
-            }
-          />
-        ) : (
-          <input
-            type="text"
-            disabled
-            value={paidByUser}
-            onChange={(e) => setWhoIsPaying(e.target.value)}
-          />
-        )}
+        <input
+          type="text"
+          value={paidByUser}
+          onChange={(e) =>
+            setPaidByUser(
+              Number(e.target.value) <= bill
+                ? Number(e.target.value)
+                : paidByUser
+            )
+          }
+        />
         <label>👯{friend.name}'s expense</label>
-        {friend.balance > 0 ? (
-          <input type="text" value={paidByFriend} />
-        ) : (
-          <input type="text" disabled value={paidByFriend} />
-        )}
+        <input type="text" disabled value={paidByFriend} />
         <label>🤑Who is paying the bill?</label>
         <select
           value={whoIsPaying}
