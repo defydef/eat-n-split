@@ -85,6 +85,7 @@ function App() {
           activeFriendId={activeFriendId}
           isAddingFriend={isAddingFriend}
           onUpdateBalance={handleFriendBalance}
+          key={activeFriendId}
         />
       </div>
     </div>
